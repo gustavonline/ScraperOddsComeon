@@ -26,6 +26,11 @@ Create enviroment
   python3.12 -m venv env
 ```
 
+Activate enviroment
+```bash
+  source env/bin/activate
+```
+
 Install dependencies
 
 ```bash
