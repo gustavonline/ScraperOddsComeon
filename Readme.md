@@ -37,6 +37,11 @@ Install dependencies
   pip install -r requirements.txt
 ```
 
+Set api.py as FLASK_APP
+```bash
+  export FLASK_APP=api.py
+```
+
 Start the server
 
 ```bash
