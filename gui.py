@@ -33,6 +33,7 @@ if st.button('Scrape Data'):
         # Display each match's data from the sorted list
         for match in sorted_data:
             st.subheader(f"Teams: {match['Teams']}")
+            st.write(f"League: {match['League']}")
             st.write(f"Date and Time: {match['Date and Time']}")
             st.write(f"Odds: {match['Odds']}")
             st.write(f"Sum of Odds: {match['Sum of Odds']}")

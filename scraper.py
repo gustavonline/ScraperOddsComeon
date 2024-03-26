@@ -14,28 +14,44 @@ def scrape_with_date(date_str):
     scraped_data = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)  # Change headless to False if you want to see the browser window
+        browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto(url)
-        # Wait for the content to load; adjust the selector as needed
         page.wait_for_selector('div[class="sportsbook-column-layout__ColumnLayoutContainer-sc-zksktt-1 cYZprt"]')
         html = page.inner_html('div[class="sportsbook-column-layout__ColumnLayoutContainer-sc-zksktt-1 cYZprt"]')
 
         soup = BeautifulSoup(html, 'html.parser')
 
-        dates_times = soup.find_all('small', class_='sportsbook-game-card__UpcomingGameTime-sc-q3kmnq-5')
-        teams = soup.find_all('p', class_='sportsbook-event-scoreboard__ScoreboardParticipantLabel-sc-ksfxup-1')
-        odds = soup.find_all('small', class_='selection-button__SelectionButtonOdds-sc-1msr0zh-1')
+        # Find each league group
+        league_groups = soup.find_all('div', class_='sportsbook-game-card-group__GameCardGroup-sc-glf6kw-1')
 
-        for i in range(0, len(teams), 2):  # Assuming two teams per match
-            if (i // 2 * 3 + 2) < len(odds):
-                match_odds = [float(odds[j].text) for j in range(i // 2 * 3, i // 2 * 3 + 3)]
-                if is_valid_match(match_odds):
-                    scraped_data.append({
-                        "Date and Time": dates_times[i // 2].text,
-                        "Teams": f"{teams[i].text} vs {teams[i + 1].text}",
-                        "Odds": ", ".join(str(odd) for odd in match_odds),
-                        "Sum of Odds": sum(match_odds)
-                    })
+        for league_group in league_groups:
+            league_header = league_group.find('h5',
+                                              class_=lambda x: x and 'sportsbook-game-card-list-header__Title' in x)
+
+            if league_header:  # Check if the league header was found
+                league_name = league_header.text
+            else:
+                league_name = "Unknown League"  # Default or placeholder value if not found
+
+            matches = league_group.find_all('div', class_='sportsbook-game-card-base__GameCardWrapper-sc-148z13o-0')
+
+            for match in matches:
+                dates_times = match.find('small', class_='sportsbook-game-card__UpcomingGameTime-sc-q3kmnq-5')
+                teams = match.find_all('p',
+                                       class_='sportsbook-event-scoreboard__ScoreboardParticipantLabel-sc-ksfxup-1')
+                odds = match.find_all('small', class_='selection-button__SelectionButtonOdds-sc-1msr0zh-1')
+
+                if len(teams) == 2 and len(odds) >= 3:
+                    match_odds = [float(od.text) for od in odds[:3]]
+                    if is_valid_match(match_odds):
+                        scraped_data.append({
+                            "Date and Time": dates_times.text if dates_times else "N/A",
+                            "Teams": f"{teams[0].text} vs {teams[1].text}" if len(teams) > 1 else "Unknown Teams",
+                            "Odds": ", ".join(str(odd) for odd in match_odds),
+                            "Sum of Odds": sum(match_odds),
+                            "League": league_name
+                        })
+
         browser.close()
     return scraped_data
