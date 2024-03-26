@@ -26,10 +26,20 @@ Create enviroment
   python3.12 -m venv env
 ```
 
+Activate enviroment
+```bash
+  source env/bin/activate
+```
+
 Install dependencies
 
 ```bash
   pip install -r requirements.txt
+```
+
+Set api.py as FLASK_APP
+```bash
+  export FLASK_APP=api.py
 ```
 
 Start the server
